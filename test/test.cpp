@@ -142,7 +142,7 @@ extern "C" DEF_FUN_VOID(http_header_auth_test);
 
 extern "C" DEF_FUN_VOID(rtsp_example);
 extern "C" DEF_FUN_VOID(rtsp_push_server);
-extern "C" DEF_FUN_2PCHAR(rtsp_client_test, const char* host, const char* file);
+extern "C" DEF_FUN_PCHAR_INT_PCHAR(rtsp_client_test, const char* host, int port, const char* stream);
 DEF_FUN_INT_PCHAR_INT_INT_PCHAR(rstp_demuxer_test, int payload, const char* encoding, uint16_t seq, uint32_t ssrc, const char* rtpfile);
 DEF_FUN_PCHAR(rtsp_client_input_test, const char* file);
 DEF_FUN_PCHAR(rtp_dump_test, const char* file);

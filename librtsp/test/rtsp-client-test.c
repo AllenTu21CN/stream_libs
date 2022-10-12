@@ -163,7 +163,7 @@ static int onpause(void* param)
 	return 0;
 }
 
-void rtsp_client_test(const char* host, const char* file)
+void rtsp_client_test(const char* host, int port, const char* stream)
 {
 	int r;
 	struct rtsp_client_test_t ctx;
@@ -181,13 +181,13 @@ void rtsp_client_test(const char* host, const char* file)
 	handler.onrtp = onrtp;
 
 	ctx.transport = RTSP_TRANSPORT_RTP_UDP; // RTSP_TRANSPORT_RTP_TCP
-	snprintf(packet, sizeof(packet), "rtsp://%s/%s", host, file); // url
+	snprintf(packet, sizeof(packet), "rtsp://%s:%d/%s", host, port, stream); // url
 
 	socket_init();
-	ctx.socket = socket_connect_host(host, 8554, 2000);
+	ctx.socket = socket_connect_host(host, port, 2000);
 	assert(socket_invalid != ctx.socket);
-	//ctx.rtsp = rtsp_client_create(NULL, NULL, &handler, &ctx);
-	ctx.rtsp = rtsp_client_create(packet, "username1", "password1", &handler, &ctx);
+	ctx.rtsp = rtsp_client_create(packet, NULL, NULL, &handler, &ctx);
+	//ctx.rtsp = rtsp_client_create(packet, "username1", "password1", &handler, &ctx);
 	assert(ctx.rtsp);
 	assert(0 == rtsp_client_describe(ctx.rtsp));
 
@@ -197,6 +197,7 @@ void rtsp_client_test(const char* host, const char* file)
 	{
 		assert(0 == rtsp_client_input(ctx.rtsp, packet, r));
 		r = socket_recv(ctx.socket, packet, sizeof(packet), 0);
+		fprintf(stderr, "socket_recv: %d\n", r);
 	}
 
 	assert(0 == rtsp_client_teardown(ctx.rtsp));
