@@ -14,7 +14,7 @@
 #include <assert.h>
 
 #define MAX_PES_HEADER	1024	// pack_header + system_header + psm
-#define MAX_PES_PACKET	0xFFFF	// 64k pes data
+#define MAX_PES_PACKET	2000	// 0xFFFF/64k pes data
 
 struct ps_muxer_t
 {
