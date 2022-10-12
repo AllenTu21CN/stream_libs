@@ -63,6 +63,13 @@ int rtp_payload_encode_input(void* encoder, const void* data, int bytes, uint32_
 	return ctx->encoder->input(ctx->packer, data, bytes, timestamp);
 }
 
+int rtp_payload_encode_input2(void* encoder, const void* data, int bytes, uint32_t timestamp, int marker_flag)
+{
+	struct rtp_payload_delegate_t* ctx;
+	ctx = (struct rtp_payload_delegate_t*)encoder;
+	return ctx->encoder->input2(ctx->packer, data, bytes, timestamp, marker_flag);
+}
+
 void* rtp_payload_decode_create(int payload, const char* name, struct rtp_payload_t *handler, void* cbparam)
 {
 	struct rtp_payload_delegate_t* ctx;

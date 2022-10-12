@@ -29,6 +29,19 @@ struct rtp_payload_encode_t
 	/// @param[in] time stream UTC time
 	/// @return 0-ok, ENOMEM-alloc failed, <0-failed
 	int(*input)(void* packer, const void* data, int bytes, uint32_t time);
+
+	/// PS/H.264 Elementary Stream to RTP Packet
+	/// @param[in] packer
+	/// @param[in] data stream data
+	/// @param[in] bytes stream length in bytes
+	/// @param[in] time stream UTC time
+	/// @param[in] marker_flag flag of mark bit:
+	///					0:set to 0 for all packets, 
+	///					1:set to 1 for all packets, 
+	///					-1:set to 1 for the last packet, 
+	///					-2:set to 1 for the first packet
+	/// @return 0-ok, ENOMEM-alloc failed, <0-failed
+	int(*input2)(void* packer, const void* data, int bytes, uint32_t time, int marker_flag);
 };
 
 struct rtp_payload_decode_t

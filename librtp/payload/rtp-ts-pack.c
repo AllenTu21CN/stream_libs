@@ -77,7 +77,7 @@ static void rtp_ts_pack_get_info(void* pack, uint16_t* seq, uint32_t* timestamp)
 	*timestamp = packer->pkt.rtp.timestamp;
 }
 
-static int rtp_ts_pack_input(void* pack, const void* data, int bytes, uint32_t timestamp)
+static int rtp_ts_pack_input2(void* pack, const void* data, int bytes, uint32_t timestamp, int marker_flag)
 {
 	int r, n;
 	uint8_t *rtp;
@@ -100,7 +100,16 @@ static int rtp_ts_pack_input(void* pack, const void* data, int bytes, uint32_t t
 
 		// M bit: Set to 1 whenever the timestamp is discontinuous
 		//packer->pkt.rtp.m = (bytes <= packer->size) ? 1 : 0;
-		packer->pkt.rtp.m = 0;
+		if (marker_flag == 0) { // set to 0 for all packets, 
+			packer->pkt.rtp.m = 0;
+		} else if (marker_flag == 1) { // set to 1 for all packets, 
+			packer->pkt.rtp.m = 1;
+		} else if (marker_flag == -1) { // set to 1 for the last packet, 
+			packer->pkt.rtp.m = (0 == bytes) ? 1 : 0;
+		} else if (marker_flag == -2) { // set to 1 for the first packet
+			packer->pkt.rtp.m = (data == packer->pkt.payload) ? 1 : 0;
+		}
+
 		n = rtp_packet_serialize(&packer->pkt, rtp, n);
 		if (n != RTP_FIXED_HEADER + packer->pkt.payloadlen)
 		{
@@ -115,6 +124,11 @@ static int rtp_ts_pack_input(void* pack, const void* data, int bytes, uint32_t t
 	return r;
 }
 
+static int rtp_ts_pack_input(void* pack, const void* data, int bytes, uint32_t timestamp)
+{
+	return rtp_ts_pack_input2(pack, data, bytes, timestamp, 0);
+}
+
 struct rtp_payload_encode_t *rtp_ts_encode()
 {
 	static struct rtp_payload_encode_t encode = {
@@ -122,6 +136,7 @@ struct rtp_payload_encode_t *rtp_ts_encode()
 		rtp_ts_pack_destroy,
 		rtp_ts_pack_get_info,
 		rtp_ts_pack_input,
+		rtp_ts_pack_input2,
 	};
 
 	return &encode;

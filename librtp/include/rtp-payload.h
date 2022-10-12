@@ -44,9 +44,14 @@ void rtp_payload_encode_getinfo(void* encoder, uint16_t* seq, uint32_t* timestam
 /// @param[in] data stream data
 /// @param[in] bytes stream length in bytes
 /// @param[in] timestamp RTP header timestamp
+/// @param[in] marker_flag flag of mark bit:
+///					0:set to 0 for all packets, 
+///					1:set to 1 for all packets, 
+///					-1:set to 1 for the last packet, 
+///					-2:set to 1 for the first packet
 /// @return 0-ok, ENOMEM-alloc failed, <0-failed
 int rtp_payload_encode_input(void* encoder, const void* data, int bytes, uint32_t timestamp);
-
+int rtp_payload_encode_input2(void* encoder, const void* data, int bytes, uint32_t timestamp, int marker_flag);
 
 /// Create RTP packet decoder
 /// @param[in] payload RTP payload type, value: [0, 127] (see more about rtp-profile.h)
