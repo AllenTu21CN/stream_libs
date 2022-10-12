@@ -46,6 +46,7 @@ struct ps_muxer_func_t
 	/// @param[in] bytes packet size
 	/// @return 0-ok, other-error
 	int (*write)(void* param, int stream, void* packet, size_t bytes);
+	int (*write2)(void* param, int stream, void* packet, size_t bytes, int64_t pts, int64_t dts);
 };
 
 struct ps_muxer_t;

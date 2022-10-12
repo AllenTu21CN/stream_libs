@@ -160,7 +160,12 @@ int ps_muxer_input(struct ps_muxer_t* ps, int streamid, int flags, int64_t pts, 
 	}
 
 	assert(i < sz);
-	r = ps->func.write(ps->param, stream->sid, packet, i);
+
+	if (ps->func.write) {
+		r = ps->func.write(ps->param, stream->sid, packet, i);
+	} else {
+		r = ps->func.write2(ps->param, stream->sid, packet, i, stream->pts, stream->dts);
+	}
 	ps->func.free(ps->param, packet);
 
 	++ps->psm_period;
