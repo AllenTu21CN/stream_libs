@@ -86,7 +86,13 @@ int rtp_onreceived_rtcp(void* rtp, const void* rtcp, int bytes)
 	return rtcp_input_rtcp(ctx, rtcp, bytes);
 }
 
+
 int rtp_rtcp_report(void* rtp, void* data, int bytes)
+{
+	return rtp_rtcp_report2(rtp, data, bytes, 1);
+}
+
+int rtp_rtcp_report2(void* rtp, void* data, int bytes, int include_sdes)
 {
 	int n;
 	struct rtp_context *ctx = (struct rtp_context *)rtp;
@@ -107,7 +113,7 @@ int rtp_rtcp_report(void* rtp, void* data, int bytes)
 	}
 
 	// compound RTCP Packet
-	if(n < bytes)
+	if(include_sdes && n < bytes)
 	{
 		n += rtcp_sdes_pack(ctx, (uint8_t*)data+n, bytes-n);
 	}

@@ -7,3 +7,5 @@ Release
 *.user
 *.d
 *.o
+*.a
+test/debug.linux

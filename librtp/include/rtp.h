@@ -88,8 +88,10 @@ int rtp_onreceived_rtcp(void* rtp, const void* rtcp, int bytes);
 /// @param[in] rtp RTP object
 /// @param[out] rtcp RTCP packet(include RTCP Header)
 /// @param[in] bytes RTCP packet size in byte
+/// @param[in] include_sdes include sdes in RTCP packet
 /// @return 0-error, >0-rtcp package size(maybe need call more times)
 int rtp_rtcp_report(void* rtp, void* rtcp, int bytes);
+int rtp_rtcp_report2(void* rtp, void* rtcp, int bytes, int include_sdes);
 
 /// create RTCP BYE packet
 /// @param[in] rtp RTP object
