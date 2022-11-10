@@ -3,7 +3,6 @@
 #include "rtp-profile.h"
 #include "rtcp-header.h"
 #include "sdp-a-fmtp.h"
-#include "mpeg-ts-proto.h"
 #include "mpeg-ps.h"
 #include "mpeg-ts.h"
 #include "avbsf.h"
@@ -113,7 +112,7 @@ static int rtsp_demuxer_mpeg2_fetch_stream(struct rtp_payload_info_t* pt, int pi
 
     mpeg2 = avpayload_find_by_mpeg2((uint8_t)codecid);
     if (mpeg2 < 0)
-        return -1;
+        return -EPROTONOSUPPORT;
 
     for (i = 0; i < sizeof(pt->tracks) / sizeof(pt->tracks[0]); i++)
     {
@@ -122,7 +121,7 @@ static int rtsp_demuxer_mpeg2_fetch_stream(struct rtp_payload_info_t* pt, int pi
     }
 
     if (i >= sizeof(pt->tracks) / sizeof(pt->tracks[0]))
-        return -1;
+        return -E2BIG;
 
     if(pt->tracks[i].codec != s_payloads[mpeg2].codecid && pt->tracks[i].bs && pt->tracks[i].filter)
         pt->tracks[i].bs->destroy(&pt->tracks[i].filter);
@@ -395,7 +394,7 @@ int rtsp_demuxer_add_payload(struct rtsp_demuxer_t* demuxer, int frequency, int 
     int (*onpacket)(void* param, const void* data, int bytes, uint32_t timestamp, int flags);
 
     if (demuxer->count >= sizeof(demuxer->pt) / sizeof(demuxer->pt[0]))
-        return -1; // too many payload type
+        return -E2BIG; // too many payload type
 
     avp = avpayload_find_by_rtp((uint8_t)payload, encoding);
     // fixme: ffmpeg g711u sample rate 0
@@ -480,7 +479,7 @@ int rtsp_demuxer_add_payload(struct rtsp_demuxer_t* demuxer, int frequency, int 
     if (!pt->rtp || (pt->bs && !pt->filter))
     {
         rtsp_demuxer_payload_close(pt);
-        return -1;
+        return -ENOMEM;
     }
 
     demuxer->count++;
@@ -520,7 +519,7 @@ int rtsp_demuxer_rtpinfo(struct rtsp_demuxer_t* demuxer, uint16_t seq, uint32_t 
     if (demuxer->idx >= demuxer->count || demuxer->idx < 0)
     {
         assert(0);
-        return -1;
+        return -ENOENT;
     }
 
     pt = &demuxer->pt[demuxer->idx];
@@ -568,7 +567,7 @@ int rtsp_demuxer_rtcp(struct rtsp_demuxer_t* demuxer, void* buf, int len)
     if (demuxer->idx >= demuxer->count || demuxer->idx < 0)
     {
         assert(0);
-        return -1;
+        return -ENOENT;
     }
 
     return rtp_demuxer_rtcp(demuxer->pt[demuxer->idx].rtp, buf, len);

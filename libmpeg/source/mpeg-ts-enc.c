@@ -2,7 +2,7 @@
 // Information technology - Generic coding of moving pictures and associated audio information: Systems
 // 2.4.3.1 Transport stream(p34)
 
-#include "mpeg-ts-proto.h"
+#include "mpeg-ts-internal.h"
 #include "mpeg-util.h"
 #include "mpeg-ts.h"
 #include <errno.h>
@@ -49,7 +49,7 @@ static int mpeg_ts_write_section_header(const mpeg_ts_enc_context_t *ts, int pid
 	int r;
 	uint8_t *data = NULL;
 	data = ts->func.alloc(ts->param, TS_PACKET_SIZE);
-	if(!data) return ENOMEM;
+	if(!data) return -ENOMEM;
 
 	assert(len < TS_PACKET_SIZE - 5); // TS-header + pointer
 
@@ -109,7 +109,7 @@ static int ts_write_pes(mpeg_ts_enc_context_t *tsctx, const struct pmt_t* pmt, s
 	while(0 == r && bytes > 0)
 	{
 		data = tsctx->func.alloc(tsctx->param, TS_PACKET_SIZE);
-		if(!data) return ENOMEM;
+		if(!data) return -ENOMEM;
 
 		// TS Header
 		data[0] = 0x47;	// sync_byte
@@ -284,7 +284,6 @@ int mpeg_ts_write(void* ts, int pid, int flags, int64_t pts, int64_t dts, const 
     stream->dts = dts;
     stream->data_alignment_indicator = (flags & MPEG_FLAG_IDR_FRAME) ? 1 : 0; // idr frame
     tsctx->h264_h265_with_aud = (flags & MPEG_FLAG_H264_H265_WITH_AUD) ? 1 : 0;
-
     // set PCR_PID
     //assert(1 == tsctx->pat.pmt_count);
     if (0x1FFF == pmt->PCR_PID || (PES_SID_VIDEO == (stream->sid & PES_SID_VIDEO) && pmt->PCR_PID != stream->pid))
@@ -297,7 +296,8 @@ int mpeg_ts_write(void* ts, int pid, int flags, int64_t pts, int64_t dts, const 
 	if (pmt->PCR_PID == stream->pid)
 		++tsctx->pcr_clock;
 
-	if(0 == ++tsctx->pat_cycle % PAT_CYCLE || 0 == tsctx->pat_period || tsctx->pat_period + PAT_PERIOD <= dts)
+	// Add PAT and PMT for video IDR frame
+	if(0 == ++tsctx->pat_cycle % PAT_CYCLE || 0 == tsctx->pat_period || tsctx->pat_period + PAT_PERIOD <= dts || (PES_SID_VIDEO == (stream->sid & PES_SID_VIDEO) && (flags & MPEG_FLAG_IDR_FRAME)))
 	{
 		tsctx->pat_cycle = 0;
 		tsctx->pat_period = dts;

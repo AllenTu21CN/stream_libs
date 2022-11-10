@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 #if defined(OS_WINDOWS)
     #if !defined(strcasecmp)
@@ -43,7 +44,7 @@ static int rtp_packet(void* param, const void *packet, int bytes, uint32_t times
 static void rtp_onrtcp(void* param, const struct rtcp_msg_t* msg)
 {
     struct rtp_sender_t* s = (struct rtp_sender_t*)param;
-    if(RTCP_MSG_BYE == msg->type && s->onbye)
+    if(RTCP_BYE == msg->type && s->onbye)
         s->onbye(param);
 }
 
@@ -66,18 +67,18 @@ int rtp_sender_init_video(struct rtp_sender_t* s, const char* proto, unsigned sh
     s->payload = payload;
     snprintf(s->encoding, sizeof(s->encoding)-1, "%s", encoding);
 
-    avp = avpayload_find_by_rtp(payload, encoding);
+    avp = avpayload_find_by_rtp((uint8_t)payload, encoding);
     if (avp < 0)
     {
         assert(0);
-        return -1;
+        return -EPROTONOSUPPORT;
     }
 
     r = sdp_payload_video(s->buffer, sizeof(s->buffer), s_payloads[avp].payload, proto, port, payload, s->frequency, extra, (int)bytes);
     if (r < 0)
     {
         assert(0);
-        return -1;
+        return -EPROTONOSUPPORT;
     }
     
     s->encoder = rtp_payload_encode_create(payload, s->encoding, s->seq, s->ssrc, &handler, s);
@@ -88,7 +89,7 @@ int rtp_sender_init_video(struct rtp_sender_t* s, const char* proto, unsigned sh
     if (r < 0 || r >= sizeof(s->buffer) || !s->rtp || !s->encoder)
     {
         rtp_sender_destroy(s);
-        return -1;
+        return -ENOMEM;
     }
     return r;
 }
@@ -113,18 +114,18 @@ int rtp_sender_init_audio(struct rtp_sender_t* s, const char* proto, unsigned sh
     s->payload = payload;
     snprintf(s->encoding, sizeof(s->encoding)-1, "%s", encoding);
     
-    avp = avpayload_find_by_rtp(payload, encoding);
+    avp = avpayload_find_by_rtp((uint8_t)payload, encoding);
     if (avp < 0)
     {
         assert(0);
-        return -1;
+        return -EPROTONOSUPPORT;
     }
 
     r = sdp_payload_audio(s->buffer, sizeof(s->buffer), s_payloads[avp].payload, proto, port, payload, sample_rate, channel_count, extra, (int)bytes);
     if (r < 0)
     {
         assert(0);
-        return -1;
+        return -EPROTONOSUPPORT;
     }
 
     switch(s_payloads[avp].payload)
@@ -158,7 +159,7 @@ int rtp_sender_init_audio(struct rtp_sender_t* s, const char* proto, unsigned sh
     if (r < 0 || !s->rtp || !s->encoder)
     {
         rtp_sender_destroy(s);
-        return -1;
+        return -ENOMEM;
     }
     return r;
 }

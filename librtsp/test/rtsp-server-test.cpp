@@ -31,8 +31,11 @@
 #define UDP_MULTICAST_ADDR "239.0.0.2"
 #define UDP_MULTICAST_PORT 6000
 
-static const char* s_workdir = "e:\\";
-//static const char* s_workdir = "/Users/ireader/video/";
+#if defined(OS_WINDOWS)
+static const char* s_workdir = "d:\\";
+#else
+static const char* s_workdir = "./";
+#endif
 
 static ThreadLocker s_locker;
 
@@ -542,6 +545,8 @@ extern "C" void rtsp_example()
 //	handler.base.send; // ignore
 	handler.onerror = rtsp_onerror;
     
+	// 1. check s_workdir, MUST be end with '/' or '\\'
+	// 2. url: rtsp://127.0.0.1:8554/vod/<filename>
 	void* tcp = rtsp_server_listen("0.0.0.0", 8554, &handler, NULL); assert(tcp);
 //	void* udp = rtsp_transport_udp_create(NULL, 554, &handler, NULL); assert(udp);
 

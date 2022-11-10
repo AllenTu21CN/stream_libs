@@ -47,7 +47,6 @@ FFFileSource::FFFileSource(const char *file)
 	if(0 == s_init)
 	{
 		s_init = 1;
-		av_register_all();
 		avformat_network_init();
 	}
 
@@ -55,6 +54,7 @@ FFFileSource::FFFileSource(const char *file)
 	m_status = 0;
 	m_clock = 0;
 	m_count = 0;
+	m_dts = -1;
 	av_init_packet(&m_pkt);
 
 	if (0 == Open(file))
@@ -119,7 +119,7 @@ int FFFileSource::Open(const char* file)
 	if (NULL == m_ic)
 	{
 		printf("%s(%s): avformat_alloc_context failed.\n", __FUNCTION__, file);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	//if (!av_dict_get(ff->opt, "scan_all_pmts", NULL, AV_DICT_MATCH_CASE)) {
